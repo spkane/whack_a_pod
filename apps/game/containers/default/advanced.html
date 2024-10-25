@@ -35,7 +35,7 @@ limitations under the License.
         <button class="action" id="deploy-start">Click to deploy</button> 
         <button id="deploy-end">Click to stop</button>  
         <code id="deployment">
-            kubectl create -f whack-a-pod-deployment.yaml
+            kubectl create deployment -f whack-a-pod-deployment.yaml
         </code>  
         <div id="nodes"></div>
         <button class="text-reveal" id="show-pod-yaml">View Deployment Yaml</button> 
@@ -47,26 +47,43 @@ limitations under the License.
         <button class="small" id="close-pod-modal">X</button>
 <h1>Deployment Configuration</h1>        
 <code><pre>
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-    name: api-deployment
+  labels:
+    app: game
+  name: api-deployment
+  namespace: default
 spec:
-    replicas: 12
-    strategy:
-        type: RollingUpdate
-    template:
-        metadata:
-            labels:
-                app: api
-        spec:
-            containers:
-            - name: "api"
-              image: "gcr.io/projectid/api"
-              ports:
-              - name: "http"
-                containerPort: 8080
-                protocol: TCP
+  progressDeadlineSeconds: 600
+  replicas: 12
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: api-deployment
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: api-deployment
+    spec:
+      containers:
+      - image: docker.io/spkane/whack-a-pod:api
+        imagePullPolicy: IfNotPresent
+        name: whack-a-pod
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 30
 </pre></code>
 
         </div>
@@ -80,19 +97,24 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-    labels:
-        name: api
-    name: api
+  labels:
+    app: api
+  name: api
 spec:
-    type: LoadBalancer
-    loadBalancerIP: 35.198.214.114
-    ports:
-    - name: "http"
-        port: 80
-        targetPort: 8080
-        protocol: TCP
-    selector:
-        app: api
+  externalTrafficPolicy: Cluster
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - nodePort: 30700
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: api-deployment
+  sessionAffinity: None
+  type: NodePort
     </pre></code>
     
             </div>

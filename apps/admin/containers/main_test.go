@@ -2,7 +2,9 @@
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-//     http://www.apache.org/licenses/LICENSE-2.0
+//
+//	http://www.apache.org/licenses/LICENSE-2.0
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -12,7 +14,7 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -20,11 +22,11 @@ import (
 	"testing"
 
 	"k8s.io/api/apps/v1beta2"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 )
 
 func TestHealth(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	req, err := http.NewRequest("GET", "/healthz", nil)
 	if err != nil {
 		t.Fatal(err)
@@ -45,7 +47,7 @@ func TestHealth(t *testing.T) {
 }
 
 func TestHandlePods(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	client = new(MockClient)
 	req, err := http.NewRequest("GET", "/admin/k8s/pods/get", nil)
 	if err != nil {
@@ -73,7 +75,7 @@ func TestHandlePods(t *testing.T) {
 }
 
 func TestHandlePodDeleteExisting(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	client = new(MockClient)
 	req, err := http.NewRequest("GET", "/admin/k8s/pod/delete?pod="+podExistsSelfLink, nil)
 	if err != nil {
@@ -101,7 +103,7 @@ func TestHandlePodDeleteExisting(t *testing.T) {
 }
 
 func TestHandlePodDeleteNonExisting(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	client = new(MockClient)
 	req, err := http.NewRequest("GET", "/admin/k8s/pod/delete?pod=dsadasdasdsa", nil)
 	if err != nil {
@@ -119,7 +121,7 @@ func TestHandlePodDeleteNonExisting(t *testing.T) {
 }
 
 func TestHandlePodsDeleteAll(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	client = new(MockClient)
 	req, err := http.NewRequest("GET", "/admin/k8s/pods/delete", nil)
 	if err != nil {
@@ -147,7 +149,7 @@ func TestHandlePodsDeleteAll(t *testing.T) {
 }
 
 func TestHandleDeploymentCreate(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	client = new(MockClient)
 	os.Setenv("APIIMAGE", "gcr.io/carnivaldemos/api")
 	req, err := http.NewRequest("GET", "/admin/k8s/deployment/create", nil)
@@ -176,7 +178,7 @@ func TestHandleDeploymentCreate(t *testing.T) {
 }
 
 func TestHandleDeploymentDelete(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	client = new(MockClient)
 	req, err := http.NewRequest("GET", "/admin/k8s/deployment/delete", nil)
 	if err != nil {
@@ -203,7 +205,7 @@ func TestHandleDeploymentDelete(t *testing.T) {
 }
 
 func TestHandleDeploymentCreateNoEnvSet(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	client = new(MockClient)
 	req, err := http.NewRequest("GET", "/admin/k8s/deployment/create", nil)
 	if err != nil {
@@ -221,7 +223,7 @@ func TestHandleDeploymentCreateNoEnvSet(t *testing.T) {
 }
 
 func TestHandleNodes(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	client = new(MockClient)
 	req, err := http.NewRequest("GET", "/admin/k8s/nodes/get", nil)
 	if err != nil {
@@ -249,7 +251,7 @@ func TestHandleNodes(t *testing.T) {
 }
 
 func TestHandleNodeDrain(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	client = new(MockClient)
 	req, err := http.NewRequest("GET", "/admin/k8s/node/drain?node="+nodeName, nil)
 	if err != nil {
@@ -277,7 +279,7 @@ func TestHandleNodeDrain(t *testing.T) {
 }
 
 func TestHandleNodeUncordon(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	client = new(MockClient)
 	req, err := http.NewRequest("GET", "/admin/k8s/node/uncordon?node="+nodeName, nil)
 	if err != nil {

@@ -23,8 +23,9 @@ reset: clean.deployment app
 reset.safe: env creds
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o "$(BASEDIR)/../containers/main" "$(BASEDIR)/../containers/main.go"
 	gcloud container builds submit "$(BASEDIR)/../containers/." --tag=$(DOCKERREPO)/api
-	-kubectl delete deployment api-deployment
-	-kubectl run api-deployment --image=$(DOCKERREPO)/api --replicas=12 --port=8080 --labels=app=api 
+	-kubectl delete --ignore-not-found=true deployment api-deployment
+	-kubectl create deployment api-deployment --replicas=12 --image=$(DOCKERREPO):api --port=8080 
+	kubectl label deployment --overwrite api-deployment app=game 
 	say "app refresh complete"		
 
 main:
@@ -46,18 +47,24 @@ deploy: env creds deployment service
 deploy.minikube: deployment service
 
 deploy.minikube.dockerhub:
-	kubectl run api-deployment --image=$(DOCKERREPO):api --replicas=12 --port=8080 --labels=app=api
+	-kubectl delete --ignore-not-found=true deployment api-deployment
+	kubectl create deployment api-deployment --replicas=12 --image=$(DOCKERREPO):api --port=8080 
+	kubectl label deployment --overwrite api-deployment app=game
 	kubectl expose deployment api-deployment --name=api --target-port=8080  --type=NodePort --labels="app=api"
 
 deploy.generic: 
-	kubectl run api-deployment --image=$(DOCKERREPO)/whackapod-api --replicas=12 --port=8080 --labels=app=api 
+	-kubectl delete --ignore-not-found=true deployment api-deployment
+	kubectl create deployment api-deployment --replicas=12 --image=$(DOCKERREPO):api --port=8080 
+	kubectl label deployment --overwrite api-deployment app=game 
 	kubectl expose deployment api-deployment --name=api --target-port=8080  --type=NodePort --labels="app=api"
 
 test: 
 	cd 	"$(BASEDIR)/../containers" && go test
 
 deployment:
-	kubectl run api-deployment --image=$(DOCKERREPO)/api --replicas=12 --port=8080 --labels=app=api 
+	-kubectl delete --ignore-not-found=true deployment api-deployment
+	kubectl create deployment api-deployment --replicas=12 --image=$(DOCKERREPO):api --port=8080 
+	kubectl label deployment --overwrite api-deployment app=game 
 
 service:
 	kubectl expose deployment api-deployment --name=api --target-port=8080  --type=NodePort --labels="app=api"
@@ -68,10 +75,10 @@ clean.generic: clean.deployment clean.service
 clean.minikube: clean.deployment clean.service 
 
 clean.deployment: 
-	-kubectl delete deployment api-deployment
+	-kubectl delete --ignore-not-found=true deployment api-deployment
 	
 clean.service: 
-	-kubectl delete service api
+	-kubectl delete --ignore-not-found=true service api
 
 retry: clean build deploy
 

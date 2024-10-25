@@ -11,26 +11,41 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: wap-ingress
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
   rules:
   - http:
       paths:
-      - path: /api/*
+      - path: /api/.*
+        pathType: ImplementationSpecific
         backend:
-          serviceName: api
-          servicePort: 8080
-      - path: /admin/*
+          service:
+            name: api
+            port:
+              number: 8080
+      - path: /admin/.*
+        pathType: ImplementationSpecific
         backend:
-          serviceName: admin
-          servicePort: 8080
-      - path: /*
+          service:
+            name: admin
+            port:
+              number: 8080
+      - path: /assets/.*
+        pathType: ImplementationSpecific
         backend:
-          serviceName: game
-          servicePort: 8080
-    host: whackapod.example.com
+          service:
+            name: game
+            port:
+              number: 8080
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: game
+            port:
+              number: 8080

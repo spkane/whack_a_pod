@@ -96,7 +96,7 @@ function startDeployment(){
     $("#deploy-end").css('z-index', 300);
     deploymentAPI.Create(initGame,genericError);
     setReport("");
-    $("#deployment").html("kubectl delete -f whack-a-pod-deployment.yaml")
+    $("#deployment").html("kubectl delete deployment -f whack-a-pod-deployment.yaml")
 }
 
 function initGame(e){

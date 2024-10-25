@@ -23,8 +23,9 @@ reset: clean.deployment app
 
 reset.safe: env creds
 	gcloud container builds submit "$(BASEDIR)/../containers/." --tag=$(DOCKERREPO)/game
-	-kubectl delete deployment game-deployment
-	kubectl run game-deployment --image=$(DOCKERREPO)/game --replicas=4 --port=8080 --labels=app=game 
+	-kubectl delete --ignore-not-found=true deployment game-deployment
+	kubectl create deployment game-deployment --replicas=4 --image=$(DOCKERREPO):game --port=8080
+	kubectl label deployment --overwrite game-deployment app=game
 	say "app refresh complete"	
 
 build: env
@@ -43,15 +44,18 @@ deploy: env creds deployment service
 deploy.minikube: deployment service
 
 deploy.minikube.dockerhub:
-	kubectl run game-deployment --image=$(DOCKERREPO):game --replicas=4 --port=8080 --labels=app=game 
+	kubectl create deployment game-deployment --replicas=4 --image=$(DOCKERREPO):game --port=8080
+	kubectl label deployment --overwrite game-deployment app=game
 	kubectl expose deployment game-deployment --name=game --target-port=8080  --type=NodePort --labels="app=game"
 
 deploy.generic: 
-	kubectl run game-deployment --image=$(DOCKERREPO)/whackapod-game --replicas=4 --port=8080 --labels=app=game 
+	kubectl create deployment game-deployment --replicas=4 --image=$(DOCKERREPO):game --port=8080
+	kubectl label deployment --overwrite game-deployment app=game
 	kubectl expose deployment game-deployment --name=game --target-port=8080  --type=NodePort --labels="app=game"
 
 deployment:
-	kubectl run game-deployment --image=$(DOCKERREPO)/game --replicas=4 --port=8080 --labels=app=game 
+	kubectl create deployment game-deployment --replicas=4 --image=$(DOCKERREPO):game --port=8080
+	kubectl label deployment --overwrite game-deployment app=game
 
 service:
 	kubectl expose deployment game-deployment --name=game --target-port=8080  --type=NodePort --labels="app=game"
@@ -63,10 +67,10 @@ clean.generic: clean.deployment clean.service
 clean.minikube: clean.deployment clean.service 
 
 clean.deployment: 
-	-kubectl delete deployment game-deployment
+	-kubectl delete --ignore-not-found=true deployment game-deployment
 	
 clean.service: 
-	-kubectl delete service game
+	-kubectl delete --ignore-not-found=true service game
 
 
 retry: clean build deploy
